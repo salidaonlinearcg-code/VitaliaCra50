@@ -673,7 +673,7 @@
           <div class="dcell"><div class="dl">VOLUMEN TEÓRICO</div><div class="dv" id="dVolTeorico"></div><div class="dsub">m³</div></div>
           <div class="dcell"><div class="dl">VOLUMEN FINAL</div><div class="dv" id="dVolFinal"></div><div class="dsub">m³</div></div>
           <div class="dcell"><div class="dl">% DESPERDICIO</div><div class="dv" id="dDesperdicio"></div><div class="dsub">sobre volumen teórico</div></div>
-          <div class="dcell"><div class="dl">FECHA DE FUNDIDO</div><div class="dv" id="dFechaFundido" style="font-size:16px"></div><div class="dsub">fecha de ejecución</div></div>
+          <div class="dcell"><div class="dl">FECHA DE FUNDIDO</div><div class="dv" id="dFechaFundido" style="font-size:16px"></div><div class="dsub"></div></div>
         </div>
         <div class="drow"><span>Desviación radial</span><b id="dRad"></b></div>
         <div class="dcoords" id="dCoords"></div>
@@ -2966,7 +2966,7 @@ function openDetail(id){
     deh.textContent=dE>=0?'al Este':'al Oeste';
     dnh.textContent=dN>=0?'al Norte':'al Sur';
     rad.textContent=fmt(p[7],1)+' cm'; rad.style.color=devColor(p[7]);
-    co.innerHTML=`Diseño &nbsp;&nbsp;&nbsp;E: ${fmt(p[1],3)} &nbsp; N: ${fmt(p[2],3)}<br>Replant. E: ${fmt(p[5],3)} &nbsp; N: ${fmt(p[6],3)}`;
+    co.innerHTML=`Diseño. &nbsp;&nbsp;&nbsp;E: ${fmt(p[1],3)} &nbsp; N: ${fmt(p[2],3)}<br>Campo. E: ${fmt(p[5],3)} &nbsp; N: ${fmt(p[6],3)}`;
     hint.style.display='none';
   }
   document.getElementById('detail').classList.add('show');
