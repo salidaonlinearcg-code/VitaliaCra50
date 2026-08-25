@@ -694,7 +694,7 @@
     <div class="search">
       <input id="q" placeholder="Buscar pilote… (ej. T2-45)" oninput="renderList()">
       <div class="filt">
-        <button class="active" data-f="all" onclick="setF('all')">Todos</button>
+        <button class="active" data-f="all" onclick="setF('all')">Total</button>
         <button data-f="pend" onclick="setF('pend')">Pendientes</button>
         <button data-f="done" onclick="setF('done')">Completados</button>
         <button data-f="bad" onclick="setF('bad')">Fuera de tol.</button>
@@ -762,17 +762,289 @@ function computeMeta(piles, baseMeta={tol:5.0,diam:0.6}){
   };
 }
 
-const P_VTL = [
-["T1-110", 96398.9082, 103043.8571, "T1", 0, null, null, null,null,null,null],
+const P_VTL = (function () {
+
+  const SHEETS_CSV_URL =
+    "https://docs.google.com/spreadsheets/d/e/2PACX-1vR5v4Uw1bRO1dBCMLtXByQsGp_CgCMZWWiUVig454WnHT_cMCBYqqXOhSKZL0dwEWHp6A9OfMNcGg_d/pub?gid=959720857&single=true&output=csv";
+
+  function parseCSV(text) {
+
+    // Detectar automáticamente el separador
+    // Puede ser coma, punto y coma o tabulación.
+    function detectDelimiter(line) {
+      let comma = 0;
+      let semicolon = 0;
+      let tab = 0;
+      let quoted = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+
+        if (c === '"') {
+          if (quoted && line[i + 1] === '"') {
+            i++;
+          } else {
+            quoted = !quoted;
+          }
+          continue;
+        }
+
+        if (!quoted) {
+          if (c === ",") comma++;
+          if (c === ";") semicolon++;
+          if (c === "\t") tab++;
+        }
+      }
+
+      if (tab >= comma && tab >= semicolon) return "\t";
+      if (semicolon >= comma) return ";";
+      return ",";
+    }
+
+    const firstLine = text.split(/\r?\n/)[0] || "";
+    const delimiter = detectDelimiter(firstLine);
+
+    const rows = [];
+    let row = [];
+    let field = "";
+    let quoted = false;
+
+    for (let i = 0; i < text.length; i++) {
+
+      const c = text[i];
+      const next = text[i + 1];
+
+      if (c === '"') {
+
+        if (quoted && next === '"') {
+          field += '"';
+          i++;
+        } else {
+          quoted = !quoted;
+        }
+
+      } else if (c === delimiter && !quoted) {
+
+        row.push(field);
+        field = "";
+
+      } else if ((c === "\n" || c === "\r") && !quoted) {
+
+        if (c === "\r" && next === "\n") i++;
+
+        row.push(field);
+        field = "";
+
+        if (row.some(v => String(v).trim() !== "")) {
+          rows.push(row);
+        }
+
+        row = [];
+
+      } else {
+
+        field += c;
+
+      }
+    }
+
+    if (field !== "" || row.length) {
+      row.push(field);
+
+      if (row.some(v => String(v).trim() !== "")) {
+        rows.push(row);
+      }
+    }
+
+    return rows;
+  }
+
+
+  function numberES(value) {
+
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    let s = String(value).trim();
+
+    if (!s || s.toLowerCase() === "null") {
+      return null;
+    }
+
+    // Elimina espacios
+    s = s.replace(/\s/g, "");
+
+    // Si viene como 96,3989082 -> 96.3989082
+    // Si viene como 96.3989082 -> se conserva.
+    if (s.includes(",") && s.includes(".")) {
+
+      // Formato tipo 1.234,56
+      if (s.lastIndexOf(",") > s.lastIndexOf(".")) {
+        s = s.replace(/\./g, "").replace(",", ".");
+      }
+
+    } else if (s.includes(",")) {
+
+      s = s.replace(",", ".");
+
+    }
+
+    const n = Number(s);
+
+    return Number.isFinite(n) ? n : null;
+  }
+
+
+  function loadFromSheets() {
+
+    try {
+
+      const xhr = new XMLHttpRequest();
+
+      // Carga síncrona intencional:
+      // necesitamos disponer de P_VTL antes de que
+      // el resto de la aplicación empiece a ejecutarse.
+      xhr.open("GET", SHEETS_CSV_URL, false);
+
+      xhr.setRequestHeader(
+        "Cache-Control",
+        "no-cache"
+      );
+
+      xhr.send(null);
+
+      if (xhr.status < 200 || xhr.status >= 300) {
+        throw new Error(
+          "Google Sheets respondió HTTP " + xhr.status
+        );
+      }
+
+      const text = xhr.responseText;
+
+      if (!text || text.length < 20) {
+        throw new Error("CSV vacío");
+      }
+
+      const rows = parseCSV(text);
+
+      const piles = [];
+
+      for (const r of rows) {
+
+        if (!r || r.length < 4) continue;
+
+        const id = String(r[0] || "").trim();
+
+        // Ignorar encabezados si posteriormente decides agregarlos.
+        if (
+          !id ||
+          id.toUpperCase() === "ID" ||
+          id.toUpperCase() === "PILOTE"
+        ) {
+          continue;
+        }
+
+        const x = numberES(r[1]);
+        const y = numberES(r[2]);
+
+        if (
+          !id ||
+          x === null ||
+          y === null
+        ) {
+          continue;
+        }
+
+        const torre = String(r[3] || "").trim();
+
+        const estado = numberES(r[4]);
+        const replX = numberES(r[5]);
+        const replY = numberES(r[6]);
+        const desviacion = numberES(r[7]);
+        const volTeorico = numberES(r[8]);
+        const volFinal = numberES(r[9]);
+
+        const fecha =
+          r[10] !== undefined &&
+          String(r[10]).trim() !== ""
+            ? String(r[10]).trim()
+            : null;
+
+        piles.push([
+          id,
+          x,
+          y,
+          torre,
+          estado === null ? 0 : estado,
+          replX,
+          replY,
+          desviacion,
+          volTeorico,
+          volFinal,
+          fecha
+        ]);
+      }
+
+      if (piles.length === 0) {
+        throw new Error(
+          "No se encontraron pilotes válidos en Google Sheets"
+        );
+      }
+
+      console.log(
+        "✓ P_VTL cargado desde Google Sheets:",
+        piles.length,
+        "pilotes"
+      );
+
+      return piles;
+
+    } catch (error) {
+
+      console.warn(
+        "⚠ No se pudo cargar Google Sheets.",
+        error
+      );
+
+      console.warn(
+        "⚠ Se utilizarán los datos locales de respaldo."
+      );
+
+      return null;
+    }
+  }
+
+
+  // Intentar primero Google Sheets.
+  const sheetsData = loadFromSheets();
+
+  if (sheetsData) {
+
+    return sheetsData;
+
+  }
+
+  // ==========================================================
+  // RESPALDO
+  // ==========================================================
+  //
+  // IMPORTANTE:
+  // Aquí comienza el arreglo P_VTL que ya tenías.
+  //
+  // NO BORRES los datos que están debajo.
+  //
+  return [
+["T1-110", 96398.9082, 103043.8571, "T1", 0 , null, null, null,null,null,null],
 ["T1-109", 96395.9473, 103046.2229, "T1", 0, null, null, null,null,null,null],
 ["T1-108", 96399.2644, 103041.1789, "T1", 0, null, null, null,null,null,null],
-["T1-107", 96397.6909, 103042.4617,"T1",1,96397.6909,103042.4617,null,null,null,"21 Agosto 2026"],
+["T1-107", 96397.6909, 103042.4617,"T1",0,null,null,null,null,null,null],
 ["T1-106", 96394.8549, 103044.8557,"T1",0,null,null,null ,null,null,null],
 ["T1-105", 96395.9572, 103042.7909,"T1",0,null,null,null,null,null,null],
 ["T1-104", 96390.2411, 103048.1325,"T1",0,null,null,null,null,null,null],
 ["T1-103", 96388.6004, 103049.4433,"T1",0,null,null,null,null,null,null],
 ["T1-102", 96392.2072, 103045.7872,"T1",0,null,null,null,null,null,null],
-["T1-101", 96384.2254, 103052.939,"T1",1, 96384.215,103052.962,null,null,null,"19 Agosto 2026"],
+["T1-101", 96384.2254, 103052.939,"T1",1,96384.215,103052.962,2.5,27.3,null,"19 Agosto 2026"],
 ["T1-100", 96382.5848, 103054.2498,"T1",0,null,null,null,null,null,null],
 ["T1-99", 96386.0353, 103050.7185,"T1",0,null,null,null,null,null,null],
 ["T1-98", 96367.1191, 103069.2564,"T1",0,null,null,null,null,null,null],
@@ -801,12 +1073,12 @@ const P_VTL = [
 ["T1-75", 96370.5287, 103061.0282,"T1",0,null,null,null,null,null,null],
 ["T1-74", 96376.074, 103055.4327,"T1",0,null,null,null,null,null,null],
 ["T1-73", 96391.3048, 103040.1722,"T1",0,null,null,null,null,null,null],
-["T1-72", 96368.6537, 103062.5263,"T1",1,96368.6537,103062.527 ,0,null,null,"24 Agosto 2026"],
+["T1-72", 96368.6537, 103062.5263,"T1",0,null,null,null,null,null,null],
 ["T1-71", 96389.1173, 103041.92,"T1",0,null,null,null,null,null,null],
 ["T1-70", 96372.3044, 103058.4446,"T1",0,null,null,null,null,null,null],
 ["T1-69", 96364.5442, 103066.0338,"T1",0,null,null,null,null,null,null],
 ["T1-68", 96386.7735, 103043.7926,"T1",0,null,null,null,null,null,null],
-["T1-67", 96385.3868, 103044.9006,"T1",1,96385.3868,103044.9006,null,null,null,"22 Agosto 2026"],
+["T1-67", 96385.3868, 103044.9006,"T1",0,null,null,null,null,null,null],
 ["T1-66", 96394.3841, 103035.8559,"T1",0,null,null,null,null,null,null],
 ["T1-65", 96382.9454, 103046.8513,"T1",0,null,null,null,null,null,null],
 ["T1-64", 96391.9427, 103037.8065,"T1",0,null,null,null,null,null,null],
@@ -851,10 +1123,10 @@ const P_VTL = [
 ["T1-25", 96357.3527, 103065.4437,"T1",0,null,null,null,null,null,null],
 ["T1-24", 96372.1539, 103050.5265,"T1",0,null,null,null,null,null,null],
 ["T1-23", 96385.1223, 103036.92,"T1",0,null,null,null,null,null,null],
-["T1-22", 96388.729, 103033.2638,"T1",1,96388.729,103033.2638,null,null,null,"19 Agosto 2026"],
+["T1-22", 96388.729, 103033.2638,"T1",0,null,null,null,null,null,null],
 ["T1-21", 96368.189, 103053.6944,"T1",0,null,null,null,null,null,null],
 ["T1-20", 96387.0884, 103034.5747,"T1",0,null,null,null,null,null,null],
-["T1-19", 96364.2242, 103056.8623,"T1",1,96364.2242,103056.8623,null,null,null,"21 Agosto 2026"],
+["T1-19", 96364.2242, 103056.8623,"T1",0,null,null,null,null,null,null],
 ["T1-18", 96378.9504, 103041.8513,"T1",0,null,null,null,null,null,null],
 ["T1-17", 96382.4009, 103038.32,"T1",0,null,null,null,null,null,null],
 ["T1-16", 96361.8218, 103058.7817,"T1",0,null,null,null,null,null,null],
@@ -992,9 +1264,11 @@ const P_VTL = [
 ["T2-3", 96368.3236, 103070.9145,"T2",0,null,null,null,null,null,null],
 ["T2-2", 96366.4378, 103072.4231,"T2",0,null,null,null,null,null,null],
 ["T2-1", 96364.4583, 103074.0067,"T2",0,null,null,null,null,null,null],
-];
+  ];
 
-const M_VTL = computeMeta(P_VTL, { 
+})();
+// Variables/ indices: 0 id,1 x,2 y,3 tower,4 status,5 ax,6 ay,7 devcm, 8 Volumen Teorico, 9 volumen final, fecha de fundido
+const M_VTL = computeMeta(P_VTL, {
   diam: 0.6,
   tol: 5.0
 });
@@ -2552,7 +2826,7 @@ function renderStats(){
    </div>
 
    <div class="stat">
-     <div class="sl">Desperdicio concreto</div>
+     <div class="sl">Desperdicio concreto Total</div>
      <div
        class="sv"
        style="color:${desperdicioColor}"
@@ -2659,7 +2933,7 @@ function renderProjects(){
 function renderTowerButtons(){
   const towers=[...new Set(PILES.map(p=>p[3]))].sort();
   const colors={T1:'#ff7a2f',T2:'#3ad6c7',T3:'#ffcf4a',T4:'#a78bfa',T5:'#5fd97a'};
-  let html=`<button class="twrb ${towerFilter==='all'?'active':''}" data-t="all" onclick="setTower('all')">Todas <span>${META.n}</span></button>`;
+  let html=`<button class="twrb ${towerFilter==='all'?'active':''}" data-t="all" onclick="setTower('all')">Total <span>${META.n}</span></button>`;
   towers.forEach(t=>{
     const c=colors[t]||'#8b97a8', n=PILES.filter(p=>p[3]===t).length;
     html+=`<button class="twrb ${towerFilter===t?'active':''}" data-t="${t}" onclick="setTower('${t}')"><span class="d" style="background:${c}"></span>${t} <span>${n}</span></button>`;
@@ -2966,7 +3240,7 @@ function openDetail(id){
     deh.textContent=dE>=0?'al Este':'al Oeste';
     dnh.textContent=dN>=0?'al Norte':'al Sur';
     rad.textContent=fmt(p[7],1)+' cm'; rad.style.color=devColor(p[7]);
-    co.innerHTML=`Diseño. &nbsp;&nbsp;&nbsp;E: ${fmt(p[1],3)} &nbsp; N: ${fmt(p[2],3)}<br>Campo. E: ${fmt(p[5],3)} &nbsp; N: ${fmt(p[6],3)}`;
+    co.innerHTML=`Diseño &nbsp;&nbsp;&nbsp;E: ${fmt(p[1],3)} &nbsp; N: ${fmt(p[2],3)}<br>Campo. E: ${fmt(p[5],3)} &nbsp; N: ${fmt(p[6],3)}`;
     hint.style.display='none';
   }
   document.getElementById('detail').classList.add('show');
