@@ -656,9 +656,9 @@
       <div class="ctl legend">
         <div class="lt">Estado del pilote</div>
         <div class="lr"><span class="mk" style="border:1.5px dashed #8b97a8;border-radius:50%"></span> Diseño / pendiente</div>
-        <div class="lr"><span class="mk" style="background:#5fd97a;border-radius:50%"></span> Hecho ·  (≤5cm)</div>
-        <div class="lr"><span class="mk" style="background:#ffcf4a;border-radius:50%"></span> Hecho · revisar (5–10cm)</div>
-        <div class="lr"><span class="mk" style="background:#ff5c6c;border-radius:50%"></span> Hecho · desviacion radial (&gt;10cm)</div>
+        <div class="lr"><span class="mk" style="background:#5fd97a;border-radius:50%"></span> Hecho ·  (≤7.5cm)</div>
+        <div class="lr"><span class="mk" style="background:#ffcf4a;border-radius:50%"></span> Hecho · revisar (7.5–12cm)</div>
+        <div class="lr"><span class="mk" style="background:#ff5c6c;border-radius:50%"></span> Hecho · desviacion radial (&gt;12cm)</div>
       </div>
       <div class="tip" id="tip"></div>
       <div class="detail" id="detail">
@@ -739,7 +739,7 @@ function computeMeta(piles, baseMeta={tol:5.0,diam:0.6}){
     sumdev += d;
     maxdev = Math.max(maxdev,d);
     if(d<=baseMeta.tol) tol_ok++;
-    else if(d<=10) tol_warn++;
+    else if(d<=12) tol_warn++;
     else tol_bad++;
   }
   return {
@@ -1270,7 +1270,7 @@ const P_VTL = (function () {
 // Variables/ indices: 0 id,1 x,2 y,3 tower,4 status,5 ax,6 ay,7 devcm, 8 Volumen Teorico, 9 volumen final, fecha de fundido
 const M_VTL = computeMeta(P_VTL, {
   diam: 0.6,
-  tol: 5.0
+  tol: 7.5
 });
 
 function toggleSide(){
@@ -2063,8 +2063,8 @@ function setOSM(enabled){
 
 const fmt=(n,d=2)=>n.toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d});
 // Variables/ indices: 0 id,1 x,2 y,3 tower,4 status,5 ax,6 ay,7 devcm, 8 Volumen Teorico, 9 volumen final, fecha de fundido
-function devColor(dev){return dev<=5?'#5fd97a':dev<=10?'#ffcf4a':'#ff5c6c';}
-function statusOf(p){if(!p[4])return'pend';const d=p[7];return d<=5?'ok':d<=10?'warn':'bad';}
+function devColor(dev){return dev<=7.5?'#5fd97a':dev<=10?'#ffcf4a':'#ff5c6c';}
+function statusOf(p){if(!p[4])return'pend';const d=p[7];return d<=7.5?'ok':d<=12?'warn':'bad';}
 
 
 
@@ -2811,7 +2811,7 @@ function renderStats(){
        ${META.tol_bad}
      </div>
      <div class="su" style="color:var(--red)">
-       &gt;10 cm
+       &gt;12 cm
      </div>
    </div>
 
@@ -3059,7 +3059,7 @@ function renderList(){
     if(q && !p[0].toUpperCase().includes(q))return false;
     if(filter==='pend')return !p[4];
     if(filter==='done')return !!p[4];
-    if(filter==='bad')return p[4] && p[7]>10;
+    if(filter==='bad')return p[4] && p[7]>12;
     return true;
   });
   document.getElementById('list').innerHTML=rows.map(p=>{
@@ -3077,7 +3077,7 @@ function openDetail(id){
   document.getElementById('dId').textContent=p[0];
   document.getElementById('dTw').textContent='· Torre '+p[3].slice(1);
   const bEl=document.getElementById('dStatus');
-  const map={pend:['Pendiente · sin replantear','b-pend'],ok:[' HECHO (≤5 cm)','b-ok'],warn:['Revisar (5–10 cm)','b-warn'],bad:['DESVIACION RADIAL (>10 cm)','b-bad']};
+  const map={pend:['Pendiente · sin replantear','b-pend'],ok:[' HECHO (≤7.5 cm)','b-ok'],warn:['Revisar (7.5–12 cm)','b-warn'],bad:['DESVIACION RADIAL (>12 cm)','b-bad']};
   bEl.textContent=map[st][0]; bEl.className='dbadge '+map[st][1];
 
   const deEl=document.getElementById('dDE'),dnEl=document.getElementById('dDN');
