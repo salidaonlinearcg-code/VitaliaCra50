@@ -2959,7 +2959,28 @@ function setV(v){
 }
 
 function setMag(m){devMag=m;document.querySelectorAll('.magb').forEach(b=>b.classList.toggle('active',+b.dataset.m===m));draw();}
-function setF(f){filter=f;document.querySelectorAll('.filt button').forEach(b=>b.classList.toggle('active',b.dataset.f===f));renderList();draw();}
+function setF(f){
+
+  filter = f;
+
+  document
+    .querySelectorAll('.filt button')
+    .forEach(b =>
+      b.classList.toggle(
+        'active',
+        b.dataset.f === f
+      )
+    );
+
+  // Actualizar cantidades de las torres
+  renderTowerButtons();
+
+  // Actualizar lista
+  renderList();
+
+  // Actualizar mapa
+  draw();
+}
 
 function actualizarContadores(){
 
@@ -2967,37 +2988,31 @@ function actualizarContadores(){
   let pendientes = 0;
   let fuera = 0;
 
-  // Torre actualmente seleccionada
-  const torreActual = document.getElementById('towerSel')?.value;
-
   PILES.forEach(p => {
 
-    // p[3] = Torre
-    const torre = String(p[3] ?? '').trim();
-
     // Si hay una torre seleccionada,
-    // solamente contamos los pilotes de esa torre
+    // solamente contamos esa torre
     if(
-      torreActual &&
-      torreActual !== 'all' &&
-      torre !== String(torreActual).trim()
+      towerFilter !== 'all' &&
+      p[3] !== towerFilter
     ){
       return;
     }
 
-    // p[10] = Fecha de fundido = columna K
+    // Columna K = fecha de fundido
     const fechaFundido = p[10];
 
-    const tieneFecha =
+    const estaFundido =
       fechaFundido !== null &&
       fechaFundido !== undefined &&
       String(fechaFundido).trim() !== '' &&
       String(fechaFundido).trim().toLowerCase() !== 'sin registrar';
 
-    if(tieneFecha){
+    if(estaFundido){
 
       fundidos++;
 
+      // Fuera de tolerancia
       if(Number(p[7]) > 12){
         fuera++;
       }
@@ -3010,12 +3025,37 @@ function actualizarContadores(){
 
   });
 
-  const total = fundidos + pendientes;
+  const total =
+    fundidos + pendientes;
 
-  document.getElementById('countTotal').textContent = total;
-  document.getElementById('countPendientes').textContent = pendientes;
-  document.getElementById('countFundidos').textContent = fundidos;
-  document.getElementById('countFuera').textContent = fuera;
+  const elTotal =
+    document.getElementById('countTotal');
+
+  const elPendientes =
+    document.getElementById('countPendientes');
+
+  const elFundidos =
+    document.getElementById('countFundidos');
+
+  const elFuera =
+    document.getElementById('countFuera');
+
+  if(elTotal){
+    elTotal.textContent = total;
+  }
+
+  if(elPendientes){
+    elPendientes.textContent = pendientes;
+  }
+
+  if(elFundidos){
+    elFundidos.textContent = fundidos;
+  }
+
+  if(elFuera){
+    elFuera.textContent = fuera;
+  }
+
 }
 
   
@@ -3062,15 +3102,99 @@ function renderProjects(){
 
 
 function renderTowerButtons(){
-  const towers=[...new Set(PILES.map(p=>p[3]))].sort();
-  const colors={T1:'#ff7a2f',T2:'#3ad6c7',T3:'#ffcf4a',T4:'#a78bfa',T5:'#5fd97a'};
-  let html=`<button class="twrb ${towerFilter==='all'?'active':''}" data-t="all" onclick="setTower('all')">Total <span>${META.n}</span></button>`;
-  towers.forEach(t=>{
-    const c=colors[t]||'#8b97a8', n=PILES.filter(p=>p[3]===t).length;
-    html+=`<button class="twrb ${towerFilter===t?'active':''}" data-t="${t}" onclick="setTower('${t}')"><span class="d" style="background:${c}"></span>${t} <span>${n}</span></button>`;
+
+  const towers = [...new Set(PILES.map(p => p[3]))].sort();
+
+  const colors = {
+    T1:'#ff7a2f',
+    T2:'#3ad6c7',
+    T3:'#ffcf4a',
+    T4:'#a78bfa',
+    T5:'#5fd97a'
+  };
+
+  // Determina si el pilote está fundido
+  function estaFundido(p){
+
+    const fecha = p[10];
+
+    return (
+      fecha !== null &&
+      fecha !== undefined &&
+      String(fecha).trim() !== '' &&
+      String(fecha).trim().toLowerCase() !== 'sin registrar'
+    );
+  }
+
+  // Aplica el filtro actualmente seleccionado
+  function cumpleFiltro(p){
+
+    if(filter === 'pend'){
+      return !estaFundido(p);
+    }
+
+    if(filter === 'done'){
+      return estaFundido(p);
+    }
+
+    if(filter === 'bad'){
+      return estaFundido(p) && Number(p[7]) > 12;
+    }
+
+    return true;
+  }
+
+  // TOTAL
+  const totalFiltrado =
+    PILES.filter(p => cumpleFiltro(p)).length;
+
+  let html = `
+    <button
+      class="twrb ${towerFilter==='all'?'active':''}"
+      data-t="all"
+      onclick="setTower('all')"
+    >
+      Total <span>${totalFiltrado}</span>
+    </button>
+  `;
+
+  // T1, T2, etc.
+  towers.forEach(t => {
+
+    const c = colors[t] || '#8b97a8';
+
+    const n = PILES.filter(p => {
+
+      // Pertenece a esta torre
+      if(p[3] !== t) return false;
+
+      // Debe cumplir Fundido/Pendiente/Fuera de tolerancia
+      return cumpleFiltro(p);
+
+    }).length;
+
+    html += `
+      <button
+        class="twrb ${towerFilter===t?'active':''}"
+        data-t="${t}"
+        onclick="setTower('${t}')"
+      >
+        <span
+          class="d"
+          style="background:${c}"
+        ></span>
+
+        ${t}
+
+        <span>${n}</span>
+      </button>
+    `;
+
   });
-  document.getElementById('twrBtns').innerHTML=html;
+
+  document.getElementById('twrBtns').innerHTML = html;
 }
+
 
 function selectProject(id){
 
@@ -3172,26 +3296,116 @@ function selectProject(id){
 
 
 function setTower(t){
-  towerFilter=t;document.querySelectorAll('.twrb').forEach(b=>b.classList.toggle('active',b.dataset.t===t));
-  // ajustar vista a los puntos visibles
-  const vis=PILES.filter(p=>t==='all'||p[3]===t);
+
+  towerFilter = t;
+
+  document
+    .querySelectorAll('.twrb')
+    .forEach(b =>
+      b.classList.toggle(
+        'active',
+        b.dataset.t === t
+      )
+    );
+
+  // Actualizar los contadores de Fundidos,
+  // Pendientes y Fuera de tolerancia
+  actualizarContadores();
+
+  // Ajustar vista a los puntos de la torre
+  const vis = PILES.filter(
+    p => t === 'all' || p[3] === t
+  );
+
   if(vis.length){
-    const xs=vis.map(p=>p[1]),ys=vis.map(p=>p[2]);
-    const sx=Math.max(Math.max(...xs)-Math.min(...xs),5),sy=Math.max(Math.max(...ys)-Math.min(...ys),5),pad=80;
-    baseScale=Math.min((W-pad*2)/sx,(H-pad*2)/sy);cam.zoom=1;
-    const mcx=(Math.min(...xs)+Math.max(...xs))/2,mcy=(Math.min(...ys)+Math.max(...ys))/2;
-    cam.ox=-(mcx-cx0)*baseScale;cam.oy=(mcy-cy0)*baseScale;
+
+    const xs = vis.map(p => p[1]);
+    const ys = vis.map(p => p[2]);
+
+    const sx =
+      Math.max(
+        Math.max(...xs) - Math.min(...xs),
+        5
+      );
+
+    const sy =
+      Math.max(
+        Math.max(...ys) - Math.min(...ys),
+        5
+      );
+
+    const pad = 80;
+
+    baseScale =
+      Math.min(
+        (W-pad*2)/sx,
+        (H-pad*2)/sy
+      );
+
+    cam.zoom = 1;
+
+    const mcx =
+      (Math.min(...xs) + Math.max(...xs))/2;
+
+    const mcy =
+      (Math.min(...ys) + Math.max(...ys))/2;
+
+    cam.ox =
+      -(mcx-cx0)*baseScale;
+
+    cam.oy =
+      (mcy-cy0)*baseScale;
   }
-  renderList();draw();
+
+  renderList();
+  draw();
 }
+
+  
 function renderList(){
   const q=(document.getElementById('q').value||'').toUpperCase();
   let rows=PILES.filter(p=>{
     if(towerFilter!=='all' && p[3]!==towerFilter)return false;
     if(q && !p[0].toUpperCase().includes(q))return false;
-    if(filter==='pend')return !p[4];
-    if(filter==='done')return !!p[4];
-    if(filter==='bad')return p[4] && p[7]>12;
+    if(filter==='pend'){
+
+  const fechaFundido = p[10];
+
+  const estaFundido =
+    fechaFundido !== null &&
+    fechaFundido !== undefined &&
+    String(fechaFundido).trim() !== '' &&
+    String(fechaFundido).trim().toLowerCase() !== 'sin registrar';
+
+  return !estaFundido;
+}
+
+if(filter==='done'){
+
+  const fechaFundido = p[10];
+
+  const estaFundido =
+    fechaFundido !== null &&
+    fechaFundido !== undefined &&
+    String(fechaFundido).trim() !== '' &&
+    String(fechaFundido).trim().toLowerCase() !== 'sin registrar';
+
+  return estaFundido;
+}
+
+if(filter==='bad'){
+
+  const fechaFundido = p[10];
+
+  const estaFundido =
+    fechaFundido !== null &&
+    fechaFundido !== undefined &&
+    String(fechaFundido).trim() !== '' &&
+    String(fechaFundido).trim().toLowerCase() !== 'sin registrar';
+
+  return estaFundido && p[7] > 12;
+}
+
     return true;
   });
   document.getElementById('list').innerHTML=rows.map(p=>{
