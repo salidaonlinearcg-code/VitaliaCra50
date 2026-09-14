@@ -2836,6 +2836,7 @@ function renderStats(){
   let pilotesConVolumen = 0;
 
   PILES.forEach(p => {
+    if (!p[10]) return; // SOLO pilotes fundidos
 
     const volTeorico = p[8];
     const volFinal = p[9];
