@@ -2396,43 +2396,97 @@ function draw(){
   }
 }
 function filterHide(p){
-  if(towerFilter!=='all' && p[3]!==towerFilter)return true;
-  if(filter==='pend'){
+
+  // =====================================================
+  // FILTRO POR TORRE
+  // =====================================================
+
+  if(
+    towerFilter !== 'all' &&
+    p[3] !== towerFilter
+  ){
+    return true;
+  }
+
+
+  // =====================================================
+  // FECHA DE FUNDIDO
+  // p[10] = columna K
+  // =====================================================
+
   const fechaFundido = p[10];
 
-  return !(
+  const estaFundido =
     fechaFundido !== null &&
     fechaFundido !== undefined &&
-    String(fechaFundido).trim() !== "" &&
-    String(fechaFundido).trim().toLowerCase() !== "sin registrar"
-  );
-}
+    String(fechaFundido).trim() !== '' &&
+    String(fechaFundido).trim().toLowerCase() !== 'sin registrar';
 
-if(filter==='done'){
-  const fechaFundido = p[10];
 
-  return (
-    fechaFundido !== null &&
-    fechaFundido !== undefined &&
-    String(fechaFundido).trim() !== "" &&
-    String(fechaFundido).trim().toLowerCase() !== "sin registrar"
-  );
-}
+  // =====================================================
+  // PENDIENTES
+  //
+  // Pendiente = NO tiene fecha de fundido.
+  //
+  // Como esta función devuelve TRUE para OCULTAR:
+  // si está fundido, lo ocultamos.
+  // =====================================================
 
-if(filter==='bad'){
-  const fechaFundido = p[10];
+  if(filter === 'pend'){
 
-  const fundido =
-    fechaFundido !== null &&
-    fechaFundido !== undefined &&
-    String(fechaFundido).trim() !== "" &&
-    String(fechaFundido).trim().toLowerCase() !== "sin registrar";
+    if(estaFundido){
+      return true;
+    }
 
-  return fundido && p[7] > 12;
-}
+    return false;
+  }
+
+
+  // =====================================================
+  // FUNDIDOS
+  //
+  // Fundido = tiene fecha de fundido.
+  //
+  // Si NO está fundido, lo ocultamos.
+  // =====================================================
+
+  if(filter === 'done'){
+
+    if(!estaFundido){
+      return true;
+    }
+
+    return false;
+  }
+
+
+  // =====================================================
+  // FUERA DE TOLERANCIA
+  //
+  // Solamente pilotes fundidos y con desviación > 12 cm
+  // =====================================================
+
+  if(filter === 'bad'){
+
+    if(
+      !estaFundido ||
+      Number(p[7]) <= 12
+    ){
+      return true;
+    }
+
+    return false;
+  }
+
+
+  // =====================================================
+  // TOTAL
+  // No ocultar nada
+  // =====================================================
 
   return false;
 }
+
 function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 function north(){const x=W-44,y=H-58;ctx.save();ctx.translate(x,y);ctx.beginPath();ctx.moveTo(0,-20);ctx.lineTo(7,8);ctx.lineTo(0,2);ctx.lineTo(-7,8);ctx.closePath();ctx.fillStyle='#ff7a2f';ctx.fill();ctx.fillStyle='#e8edf4';ctx.font='700 12px Archivo';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('N',0,10);ctx.restore();}
 function scale(step){const s=baseScale*cam.zoom,px=step*s,x=20,y=H-30;ctx.strokeStyle='#e8edf4';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+px,y);ctx.moveTo(x,y-5);ctx.lineTo(x,y+5);ctx.moveTo(x+px,y-5);ctx.lineTo(x+px,y+5);ctx.stroke();ctx.fillStyle='#e8edf4';ctx.font='600 11px IBM Plex Mono';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText(fmt(step,0)+' m',x,y-8);}
