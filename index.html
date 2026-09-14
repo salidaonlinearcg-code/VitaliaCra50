@@ -2816,7 +2816,7 @@ function renderStats(){
    </div>
 
    <div class="stat">
-     <div class="sl">HECHO</div>
+     <div class="sl"> Replanteado </div>
      <div class="sv" style="color:var(--green)">
        ${META.tol_ok}
      </div>
@@ -3064,7 +3064,7 @@ function renderList(){
   });
   document.getElementById('list').innerHTML=rows.map(p=>{
     const st=statusOf(p);
-    const badge=st==='pend'?'<span class="badge b-pend">Pendiente</span>':st==='ok'?'<span class="badge b-ok">HECHO.</span>':st==='warn'?'<span class="badge b-warn">Revisar</span>':'<span class="badge b-bad">Fuera de tol.</span>';
+    const badge=st==='pend'?'<span class="badge b-pend">Pendiente</span>':st==='ok'?'<span class="badge b-ok"> Fundido . </span>':st==='warn'?'<span class="badge b-warn">Revisar</span>':'<span class="badge b-bad">Fuera de tol.</span>';
     const dev=p[4]?`<span style="color:${devColor(p[7])}">${fmt(p[7],1)} cm</span>`:'<span style="color:var(--txt-faint)">—</span>';
     return `<div class="pt-row ${p[0]===selId?'sel':''}" onclick="locate('${p[0]}')"><div class="id" style="color:${TOWERC[p[3]]}">${p[0]}</div><div>${badge}</div><div class="dev">${dev}</div><div class="dev" style="color:var(--txt-dim)">${p[3]}</div></div>`;
   }).join('');
@@ -3077,7 +3077,7 @@ function openDetail(id){
   document.getElementById('dId').textContent=p[0];
   document.getElementById('dTw').textContent='· Torre '+p[3].slice(1);
   const bEl=document.getElementById('dStatus');
-  const map={pend:['Pendiente · sin replantear','b-pend'],ok:[' HECHO (≤7.5 cm)','b-ok'],warn:['Revisar (7.5–12 cm)','b-warn'],bad:['DESVIACION RADIAL (>12 cm)','b-bad']};
+  const map={pend:['Pendiente · sin replantear','b-pend'],ok:[' Fundido (≤7.5 cm)','b-ok'],warn:['Revisar (7.5–12 cm)','b-warn'],bad:['DESVIACION RADIAL (>12 cm)','b-bad']};
   bEl.textContent=map[st][0]; bEl.className='dbadge '+map[st][1];
 
   const deEl=document.getElementById('dDE'),dnEl=document.getElementById('dDN');
@@ -3088,6 +3088,7 @@ function openDetail(id){
   // [8] volumen teórico
   // [9] volumen final
   // [10] fecha de fundido
+  // [11] fecha de replanteo
   // =========================================================
 
   const volTeorico = p[8];
