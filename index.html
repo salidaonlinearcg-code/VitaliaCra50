@@ -2967,61 +2967,57 @@ function actualizarContadores(){
   let pendientes = 0;
   let fuera = 0;
 
+  // Torre actualmente seleccionada
+  const torreActual = document.getElementById('towerSel')?.value;
+
   PILES.forEach(p => {
 
-    // p[10] = FECHA DE FUNDIDO = columna K
+    // p[3] = Torre
+    const torre = String(p[3] ?? '').trim();
+
+    // Si hay una torre seleccionada,
+    // solamente contamos los pilotes de esa torre
+    if(
+      torreActual &&
+      torreActual !== 'all' &&
+      torre !== String(torreActual).trim()
+    ){
+      return;
+    }
+
+    // p[10] = Fecha de fundido = columna K
     const fechaFundido = p[10];
 
     const tieneFecha =
       fechaFundido !== null &&
       fechaFundido !== undefined &&
-      String(fechaFundido).trim() !== "" &&
-      String(fechaFundido).trim().toLowerCase() !== "sin registrar";
+      String(fechaFundido).trim() !== '' &&
+      String(fechaFundido).trim().toLowerCase() !== 'sin registrar';
 
     if(tieneFecha){
+
       fundidos++;
 
-      // Fuera de tolerancia solamente entre los fundidos
       if(Number(p[7]) > 12){
         fuera++;
       }
 
     }else{
+
       pendientes++;
+
     }
 
   });
 
-  const total = PILES.length;
+  const total = fundidos + pendientes;
 
-  const elTotal =
-    document.getElementById('countTotal');
-
-  const elPendientes =
-    document.getElementById('countPendientes');
-
-  const elFundidos =
-    document.getElementById('countFundidos');
-
-  const elFuera =
-    document.getElementById('countFuera');
-
-  if(elTotal){
-    elTotal.textContent = total;
-  }
-
-  if(elPendientes){
-    elPendientes.textContent = pendientes;
-  }
-
-  if(elFundidos){
-    elFundidos.textContent = fundidos;
-  }
-
-  if(elFuera){
-    elFuera.textContent = fuera;
-  }
+  document.getElementById('countTotal').textContent = total;
+  document.getElementById('countPendientes').textContent = pendientes;
+  document.getElementById('countFundidos').textContent = fundidos;
+  document.getElementById('countFuera').textContent = fuera;
 }
+
   
   
 function renderProjects(){
