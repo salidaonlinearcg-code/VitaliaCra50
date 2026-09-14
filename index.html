@@ -673,7 +673,26 @@
           <div class="dcell"><div class="dl">VOLUMEN TEÓRICO</div><div class="dv" id="dVolTeorico"></div><div class="dsub">m³</div></div>
           <div class="dcell"><div class="dl">VOLUMEN FINAL</div><div class="dv" id="dVolFinal"></div><div class="dsub">m³</div></div>
           <div class="dcell"><div class="dl">% DESPERDICIO</div><div class="dv" id="dDesperdicio"></div><div class="dsub">sobre volumen teórico</div></div>
-          <div class="dcell"><div class="dl">FECHA DE FUNDIDO</div><div class="dv" id="dFechaFundido" style="font-size:16px"></div><div class="dsub"></div></div>
+          <div class="dcell">
+  <div class="dl">FECHAS</div>
+
+  <div style="margin-top:8px">
+    <div style="font-family:var(--mono);font-size:9px;color:var(--txt-faint);text-transform:uppercase">
+      Fecha de fundido
+    </div>
+
+    <div class="dv" id="dFechaFundido" style="font-size:15px"></div>
+  </div>
+
+  <div style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">
+    <div style="font-family:var(--mono);font-size:9px;color:var(--txt-faint);text-transform:uppercase">
+      Fecha de replanteo
+    </div>
+
+    <div class="dv" id="dFechaReplanteo" style="font-size:15px"></div>
+  </div>
+</div>
+
         </div>
         <div class="drow"><span>Desviación radial</span><b id="dRad"></b></div>
         <div class="dcoords" id="dCoords"></div>
@@ -965,11 +984,18 @@ const P_VTL = (function () {
         const volTeorico = numberES(r[8]);
         const volFinal = numberES(r[9]);
 
-        const fecha =
-          r[10] !== undefined &&
-          String(r[10]).trim() !== ""
-            ? String(r[10]).trim()
-            : null;
+       const fechaFundido =
+        r[10] !== undefined &&
+        String(r[10]).trim() !== ""
+        ? String(r[10]).trim()
+        : null;
+
+      const fechaReplanteo =
+        r[11] !== undefined &&
+        String(r[11]).trim() !== ""
+        ? String(r[11]).trim()
+        : null;
+
 
         piles.push([
           id,
@@ -982,7 +1008,8 @@ const P_VTL = (function () {
           desviacion,
           volTeorico,
           volFinal,
-          fecha
+          fechaFundido,
+          fechaReplanteo
         ]);
       }
 
@@ -3094,6 +3121,7 @@ function openDetail(id){
   const volTeorico = p[8];
   const volFinal = p[9];
   const fechaFundido = p[10];
+  const fechaReplanteo = p[11];
 
   const volTeoricoEl =
     document.getElementById('dVolTeorico');
@@ -3106,6 +3134,10 @@ function openDetail(id){
 
   const fechaFundidoEl =
     document.getElementById('dFechaFundido');
+  
+  const fechaReplanteoEl =
+  document.getElementById('dFechaReplanteo');
+
 
 
   // ---------------------------------------------------------
@@ -3130,6 +3162,25 @@ function openDetail(id){
     volTeoricoEl.style.color =
       'var(--txt-faint)';
   }
+
+  // ---------------------------------------------------------
+// FECHA DE REPLANTEO — COLUMNA L
+// ---------------------------------------------------------
+
+if(fechaReplanteo){
+  fechaReplanteoEl.textContent =
+    fechaReplanteo;
+
+  fechaReplanteoEl.style.color =
+    'var(--cyan)';
+
+}else{
+  fechaReplanteoEl.textContent =
+    'Sin registrar';
+
+  fechaReplanteoEl.style.color =
+    'var(--txt-faint)';
+}
 
 
   // ---------------------------------------------------------
