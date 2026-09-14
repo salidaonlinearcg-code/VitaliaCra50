@@ -713,11 +713,25 @@
     <div class="search">
       <input id="q" placeholder="Buscar pilote… (ej. T2-45)" oninput="renderList()">
       <div class="filt">
-        <button class="active" data-f="all" onclick="setF('all')">Total</button>
-        <button data-f="pend" onclick="setF('pend')"> Pendientes </button>
-        <button data-f="done" onclick="setF('done')"> Fundidos </button>
-        <button data-f="bad" onclick="setF('bad')">Fuera de tol.</button>
-      </div>
+
+<button class="active" data-f="all" onclick="setF('all')">
+  Total <span id="countTotal">0</span>
+</button>
+
+<button data-f="pend" onclick="setF('pend')">
+  Pendientes <span id="countPendientes">0</span>
+</button>
+
+<button data-f="done" onclick="setF('done')">
+  Fundidos <span id="countFundidos">0</span>
+</button>
+
+<button data-f="bad" onclick="setF('bad')">
+  Fuera de tol. <span id="countFuera">0</span>
+</button>
+
+</div>
+
     </div>
     <div class="tbl-head"><div>Pilote</div><div>Estado</div><div style="text-align:right">Desvío</div><div style="text-align:right">Torre</div></div>
     <div class="pts" id="list"></div>
@@ -2383,9 +2397,40 @@ function draw(){
 }
 function filterHide(p){
   if(towerFilter!=='all' && p[3]!==towerFilter)return true;
-  if(filter==='pend' && p[4])return true;
-  if(filter==='done' && !p[4])return true;
-  if(filter==='bad' && !(p[4] && p[7]>10))return true;
+  if(filter==='pend'){
+  const fechaFundido = p[10];
+
+  return !(
+    fechaFundido !== null &&
+    fechaFundido !== undefined &&
+    String(fechaFundido).trim() !== "" &&
+    String(fechaFundido).trim().toLowerCase() !== "sin registrar"
+  );
+}
+
+if(filter==='done'){
+  const fechaFundido = p[10];
+
+  return (
+    fechaFundido !== null &&
+    fechaFundido !== undefined &&
+    String(fechaFundido).trim() !== "" &&
+    String(fechaFundido).trim().toLowerCase() !== "sin registrar"
+  );
+}
+
+if(filter==='bad'){
+  const fechaFundido = p[10];
+
+  const fundido =
+    fechaFundido !== null &&
+    fechaFundido !== undefined &&
+    String(fechaFundido).trim() !== "" &&
+    String(fechaFundido).trim().toLowerCase() !== "sin registrar";
+
+  return fundido && p[7] > 12;
+}
+
   return false;
 }
 function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
@@ -2916,6 +2961,69 @@ function setV(v){
 function setMag(m){devMag=m;document.querySelectorAll('.magb').forEach(b=>b.classList.toggle('active',+b.dataset.m===m));draw();}
 function setF(f){filter=f;document.querySelectorAll('.filt button').forEach(b=>b.classList.toggle('active',b.dataset.f===f));renderList();draw();}
 
+function actualizarContadores(){
+
+  let fundidos = 0;
+  let pendientes = 0;
+  let fuera = 0;
+
+  PILES.forEach(p => {
+
+    // p[10] = FECHA DE FUNDIDO = columna K
+    const fechaFundido = p[10];
+
+    const tieneFecha =
+      fechaFundido !== null &&
+      fechaFundido !== undefined &&
+      String(fechaFundido).trim() !== "" &&
+      String(fechaFundido).trim().toLowerCase() !== "sin registrar";
+
+    if(tieneFecha){
+      fundidos++;
+
+      // Fuera de tolerancia solamente entre los fundidos
+      if(Number(p[7]) > 12){
+        fuera++;
+      }
+
+    }else{
+      pendientes++;
+    }
+
+  });
+
+  const total = PILES.length;
+
+  const elTotal =
+    document.getElementById('countTotal');
+
+  const elPendientes =
+    document.getElementById('countPendientes');
+
+  const elFundidos =
+    document.getElementById('countFundidos');
+
+  const elFuera =
+    document.getElementById('countFuera');
+
+  if(elTotal){
+    elTotal.textContent = total;
+  }
+
+  if(elPendientes){
+    elPendientes.textContent = pendientes;
+  }
+
+  if(elFundidos){
+    elFundidos.textContent = fundidos;
+  }
+
+  if(elFuera){
+    elFuera.textContent = fuera;
+  }
+}
+  
+  
 function renderProjects(){
 
   document.getElementById('projList').innerHTML =
@@ -2982,6 +3090,7 @@ function selectProject(id){
   // Datos que utiliza toda la plataforma
   PILES = activeProj.pilotes;
   META = computeMeta(activeProj.pilotes, activeProj.resumen || {});
+  actualizarContadores();
 
 
 
