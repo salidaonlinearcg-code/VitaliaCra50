@@ -2104,8 +2104,8 @@ function setOSM(enabled){
 
 const fmt=(n,d=2)=>n.toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d});
 // Variables/ indices: 0 id,1 x,2 y,3 tower,4 status,5 ax,6 ay,7 devcm, 8 Volumen Teorico, 9 volumen final, fecha de fundido
-function devColor(dev){return dev<=7.5?'#5fd97a':dev<=12?'#ffcf4a':'#ff5c6c';}
-function statusOf(p){if(!p[4])return'pend';const d=p[7];return d<=7.5?'ok':d<=12?'warn':'bad';}
+function devColor(dev){return dev<=7.5?'#5fd97a':dev<=15?'#ffcf4a':'#ff5c6c';}
+function statusOf(p){if(!p[4])return'pend';const d=p[7];return d<=7.5?'ok':d<=15?'warn':'bad';}
 
 
 
