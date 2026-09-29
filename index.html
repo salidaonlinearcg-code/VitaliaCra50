@@ -653,6 +653,14 @@
   <input type="checkbox" id="lyT2" onchange="draw()">
   Torre 2
 </label>
+        
+<label class="lay">
+  <input type="checkbox" id="lyParamento" onchange="draw()">
+  Paramento
+</label>
+
+        
+        
 
         <div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px">
           <div class="lt" style="margin-bottom:6px">Exagerar desvío</div>
@@ -753,6 +761,9 @@
 </div>
 <div class="toast" id="toast"><div class="ti">✓</div><div id="toastTxt"></div></div>
 
+<script src="./T1_.js"></script>
+<script src="./T2_.js"></script>
+<script src="./paramento.js"></script>
 <script>
 
 function computeMeta(piles, baseMeta={tol:7.5,diam:0.6}){
@@ -2124,6 +2135,116 @@ function statusOf(p){if(!p[4])return'pend';const d=p[7];return d<=7.5?'ok':d<=15
 
 
 function world(x,y){const s=baseScale*cam.zoom;return{x:W/2+(x-cx0)*s+cam.ox,y:H/2-(y-cy0)*s+cam.oy};}
+
+function drawCadLayer(layer){
+
+  if(!layer || !layer.features) return;
+
+  layer.features.forEach(feature => {
+
+    const geometry = feature.geometry;
+
+    if(!geometry) return;
+
+    const drawLine = (coords) => {
+
+      if(!coords || coords.length < 2) return;
+
+      ctx.beginPath();
+
+      coords.forEach((p,i) => {
+
+        const s = world(p[0],p[1]);
+
+        if(i === 0){
+          ctx.moveTo(s.x,s.y);
+        }else{
+          ctx.lineTo(s.x,s.y);
+        }
+
+      });
+
+      ctx.stroke();
+
+    };
+
+    if(geometry.type === 'LineString'){
+
+      drawLine(geometry.coordinates);
+
+    }
+
+    else if(geometry.type === 'MultiLineString'){
+
+      geometry.coordinates.forEach(line => {
+        drawLine(line);
+      });
+
+    }
+
+    else if(geometry.type === 'Polygon'){
+
+      geometry.coordinates.forEach(ring => {
+
+        if(!ring || ring.length < 2) return;
+
+        ctx.beginPath();
+
+        ring.forEach((p,i) => {
+
+          const s = world(p[0],p[1]);
+
+          if(i === 0){
+            ctx.moveTo(s.x,s.y);
+          }else{
+            ctx.lineTo(s.x,s.y);
+          }
+
+        });
+
+        ctx.closePath();
+        ctx.stroke();
+
+      });
+
+    }
+
+    else if(geometry.type === 'MultiPolygon'){
+
+      geometry.coordinates.forEach(poly => {
+
+        poly.forEach(ring => {
+
+          if(!ring || ring.length < 2) return;
+
+          ctx.beginPath();
+
+          ring.forEach((p,i) => {
+
+            const s = world(p[0],p[1]);
+
+            if(i === 0){
+              ctx.moveTo(s.x,s.y);
+            }else{
+              ctx.lineTo(s.x,s.y);
+            }
+
+          });
+
+          ctx.closePath();
+          ctx.stroke();
+
+        });
+
+      });
+
+    }
+
+  });
+
+}
+
+  
 function resize(){
 
   const r =
@@ -2395,6 +2516,10 @@ if (document.getElementById('lyT1')?.checked) {
 
 if (document.getElementById('lyT2')?.checked) {
   drawCadLayer(T2__LAYER);
+}
+
+if (document.getElementById('lyParamento')?.checked) {
+  drawCadLayer(PARAMENTO_LAYER);
 }
 
   
