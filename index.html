@@ -640,6 +640,20 @@
         <label class="lay"><input type="checkbox" id="lyBuilt" checked onchange="draw()"> Replanteado (i76)</label>
         <label class="lay"><input type="checkbox" id="lyVec" checked onchange="draw()"> Vector de desvío</label>
         <label class="lay"><input type="checkbox" id="lyHull" onchange="draw()"> Huella / área por torre</label>
+        <div class="lt" style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px">
+  Torres
+</div>
+
+<label class="lay">
+  <input type="checkbox" id="lyT1" onchange="draw()">
+  Torre 1
+</label>
+
+<label class="lay">
+  <input type="checkbox" id="lyT2" onchange="draw()">
+  Torre 2
+</label>
+
         <div style="margin-top:8px;border-top:1px solid var(--line);padding-top:8px">
           <div class="lt" style="margin-bottom:6px">Exagerar desvío</div>
           <div style="display:flex;gap:4px" id="magBtns">
@@ -657,8 +671,8 @@
         <div class="lt">Estado del pilote</div>
         <div class="lr"><span class="mk" style="border:1.5px dashed #8b97a8;border-radius:50%"></span> Diseño / pendiente</div>
         <div class="lr"><span class="mk" style="background:#5fd97a;border-radius:50%"></span> Fundido ·  (≤7.5cm)</div>
-        <div class="lr"><span class="mk" style="background:#ffcf4a;border-radius:50%"></span> Fundido · revisar (7.5–12cm)</div>
-        <div class="lr"><span class="mk" style="background:#ff5c6c;border-radius:50%"></span> Fundido · desviacion radial (&gt;12cm)</div>
+        <div class="lr"><span class="mk" style="background:#ffcf4a;border-radius:50%"></span> Fundido · revisar (7.5–15cm)</div>
+        <div class="lr"><span class="mk" style="background:#ff5c6c;border-radius:50%"></span> Fundido · desviacion radial (&gt;15cm)</div>
       </div>
       <div class="tip" id="tip"></div>
       <div class="detail" id="detail">
@@ -2370,6 +2384,20 @@ function draw(){
       ctx.fillStyle=col;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(lab,c.x,c.y);
     });
   }
+
+  // ======================================================
+// CAPAS DE TORRES
+// ======================================================
+
+if (document.getElementById('lyT1')?.checked) {
+  drawCadLayer(T1__LAYER);
+}
+
+if (document.getElementById('lyT2')?.checked) {
+  drawCadLayer(T2__LAYER);
+}
+
+  
   // Línea de medición entre dos pilotes
   if(measA){
     const a=PILES.find(x=>x[0]===measA); const sa=world(a[1],a[2]);
@@ -2487,6 +2515,161 @@ function filterHide(p){
   return false;
 }
 
+function drawCadLayer(layer){
+
+  if(!layer || !layer.features) return;
+
+  ctx.save();
+
+  layer.features.forEach(feature => {
+
+    if(!feature.geometry) return;
+
+    const geometry = feature.geometry;
+
+    // --------------------------------------------------
+    // LINESTRING
+    // --------------------------------------------------
+
+    if(geometry.type === 'LineString'){
+
+      const coords = geometry.coordinates;
+
+      if(!coords || coords.length < 2) return;
+
+      ctx.beginPath();
+
+      coords.forEach((p,i)=>{
+
+        const s = world(p[0],p[1]);
+
+        if(i === 0){
+          ctx.moveTo(s.x,s.y);
+        }else{
+          ctx.lineTo(s.x,s.y);
+        }
+
+      });
+
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.2;
+
+      ctx.stroke();
+    }
+
+
+    // --------------------------------------------------
+    // MULTILINESTRING
+    // --------------------------------------------------
+
+    else if(geometry.type === 'MultiLineString'){
+
+      geometry.coordinates.forEach(line=>{
+
+        if(!line || line.length < 2) return;
+
+        ctx.beginPath();
+
+        line.forEach((p,i)=>{
+
+          const s = world(p[0],p[1]);
+
+          if(i === 0){
+            ctx.moveTo(s.x,s.y);
+          }else{
+            ctx.lineTo(s.x,s.y);
+          }
+
+        });
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.2;
+
+        ctx.stroke();
+
+      });
+    }
+
+
+    // --------------------------------------------------
+    // POLYGON
+    // --------------------------------------------------
+
+    else if(geometry.type === 'Polygon'){
+
+      geometry.coordinates.forEach(ring=>{
+
+        if(!ring || ring.length < 2) return;
+
+        ctx.beginPath();
+
+        ring.forEach((p,i)=>{
+
+          const s = world(p[0],p[1]);
+
+          if(i === 0){
+            ctx.moveTo(s.x,s.y);
+          }else{
+            ctx.lineTo(s.x,s.y);
+          }
+
+        });
+
+        ctx.closePath();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.2;
+
+        ctx.stroke();
+
+      });
+    }
+
+
+    // --------------------------------------------------
+    // MULTIPOLYGON
+    // --------------------------------------------------
+
+    else if(geometry.type === 'MultiPolygon'){
+
+      geometry.coordinates.forEach(polygon=>{
+
+        polygon.forEach(ring=>{
+
+          if(!ring || ring.length < 2) return;
+
+          ctx.beginPath();
+
+          ring.forEach((p,i)=>{
+
+            const s = world(p[0],p[1]);
+
+            if(i === 0){
+              ctx.moveTo(s.x,s.y);
+            }else{
+              ctx.lineTo(s.x,s.y);
+            }
+
+          });
+
+          ctx.closePath();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.2;
+
+          ctx.stroke();
+
+        });
+
+      });
+    }
+
+  });
+
+  ctx.restore();
+}
+
+  
 function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
 function north(){const x=W-44,y=H-58;ctx.save();ctx.translate(x,y);ctx.beginPath();ctx.moveTo(0,-20);ctx.lineTo(7,8);ctx.lineTo(0,2);ctx.lineTo(-7,8);ctx.closePath();ctx.fillStyle='#ff7a2f';ctx.fill();ctx.fillStyle='#e8edf4';ctx.font='700 12px Archivo';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText('N',0,10);ctx.restore();}
 function scale(step){const s=baseScale*cam.zoom,px=step*s,x=20,y=H-30;ctx.strokeStyle='#e8edf4';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+px,y);ctx.moveTo(x,y-5);ctx.lineTo(x,y+5);ctx.moveTo(x+px,y-5);ctx.lineTo(x+px,y+5);ctx.stroke();ctx.fillStyle='#e8edf4';ctx.font='600 11px IBM Plex Mono';ctx.textAlign='left';ctx.textBaseline='bottom';ctx.fillText(fmt(step,0)+' m',x,y-8);}
