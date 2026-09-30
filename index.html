@@ -3285,7 +3285,7 @@ function renderStats(){
     pct+'%';
 
   document.getElementById('progSub').textContent =
-    `${META.done} de ${META.n} pilotes · faltan ${META.pending} · , ${META.tol_bad} tolerancias altas`;
+    `${META.done} de ${META.n} pilotes · faltan ${META.pending} ·  ${META.tol_warn} , ${META.tol_bad} tolerancias altas`;
 }
 function setV(v){
 
@@ -3773,7 +3773,7 @@ if(filter==='bad'){
   });
   document.getElementById('list').innerHTML=rows.map(p=>{
     const st=statusOf(p);
-    const badge=st==='pend'?'<span class="badge b-pend">Pendiente</span>':st==='ok'?'<span class="badge b-ok"> Fundido .:'<span class="badge b-bad">Fuera de tol.</span>';
+    const badge=st==='pend'?'<span class="badge b-pend">Pendiente</span>':st==='ok'?'<span class="badge b-ok"> Fundido .</span>':st==='warn'?'<span class="badge b-warn">Revisar</span>':'<span class="badge b-bad">Fuera de tol.</span>';
     const dev=p[4]?`<span style="color:${devColor(p[7])}">${fmt(p[7],1)} cm</span>`:'<span style="color:var(--txt-faint)">—</span>';
     return `<div class="pt-row ${p[0]===selId?'sel':''}" onclick="locate('${p[0]}')"><div class="id" style="color:${TOWERC[p[3]]}">${p[0]}</div><div>${badge}</div><div class="dev">${dev}</div><div class="dev" style="color:var(--txt-dim)">${p[3]}</div></div>`;
   }).join('');
