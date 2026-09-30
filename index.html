@@ -679,7 +679,7 @@
         <div class="lt">Estado del pilote</div>
         <div class="lr"><span class="mk" style="border:1.5px dashed #8b97a8;border-radius:50%"></span> Diseño / pendiente</div>
         <div class="lr"><span class="mk" style="background:#5fd97a;border-radius:50%"></span> Fundido ·  (≤7.5cm)</div>
-        <div class="lr"><span class="mk" style="background:#ffcf4a;border-radius:50%"></span> Fundido · revisar (7.5–15cm)</div>
+        <div class="lr"><span class="mk" style="background:#ffcf4a;border-radius:50%"></span> Fundido · (7.5–15cm)</div>
         <div class="lr"><span class="mk" style="background:#ff5c6c;border-radius:50%"></span> Fundido · desviacion radial (&gt;15cm)</div>
       </div>
       <div class="tip" id="tip"></div>
@@ -3285,7 +3285,7 @@ function renderStats(){
     pct+'%';
 
   document.getElementById('progSub').textContent =
-    `${META.done} de ${META.n} pilotes · faltan ${META.pending} · ${META.tol_warn} a revisar, ${META.tol_bad} fuera de tolerancia`;
+    `${META.done} de ${META.n} pilotes · faltan ${META.pending} · , ${META.tol_bad} tolerancias altas`;
 }
 function setV(v){
 
@@ -3773,7 +3773,7 @@ if(filter==='bad'){
   });
   document.getElementById('list').innerHTML=rows.map(p=>{
     const st=statusOf(p);
-    const badge=st==='pend'?'<span class="badge b-pend">Pendiente</span>':st==='ok'?'<span class="badge b-ok"> Fundido . </span>':st==='warn'?'<span class="badge b-warn">Revisar</span>':'<span class="badge b-bad">Fuera de tol.</span>';
+    const badge=st==='pend'?'<span class="badge b-pend">Pendiente</span>':st==='ok'?'<span class="badge b-ok"> Fundido .:'<span class="badge b-bad">Fuera de tol.</span>';
     const dev=p[4]?`<span style="color:${devColor(p[7])}">${fmt(p[7],1)} cm</span>`:'<span style="color:var(--txt-faint)">—</span>';
     return `<div class="pt-row ${p[0]===selId?'sel':''}" onclick="locate('${p[0]}')"><div class="id" style="color:${TOWERC[p[3]]}">${p[0]}</div><div>${badge}</div><div class="dev">${dev}</div><div class="dev" style="color:var(--txt-dim)">${p[3]}</div></div>`;
   }).join('');
@@ -3786,7 +3786,7 @@ function openDetail(id){
   document.getElementById('dId').textContent=p[0];
   document.getElementById('dTw').textContent='· Torre '+p[3].slice(1);
   const bEl=document.getElementById('dStatus');
-  const map={pend:['Pendiente · sin replantear','b-pend'],ok:[' Fundido (≤7.5 cm)','b-ok'],warn:['Revisar (7.5–12 cm)','b-warn'],bad:['DESVIACION RADIAL (>12 cm)','b-bad']};
+  const map={pend:['Pendiente · sin replantear','b-pend'],ok:[' Fundido (≤7.5 cm)','b-ok'],warn:[' (7.5–15 cm)','b-warn'],bad:['DESVIACION RADIAL (>15 cm)','b-bad']};
   bEl.textContent=map[st][0]; bEl.className='dbadge '+map[st][1];
 
   const deEl=document.getElementById('dDE'),dnEl=document.getElementById('dDN');
