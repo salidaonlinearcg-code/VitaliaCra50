@@ -3240,18 +3240,9 @@ function renderStats(){
      </div>
    </div>
 
-   <div class="stat">
-     <div class="sl">Fuera de tol.</div>
-     <div class="sv" style="color:var(--red)">
-       ${META.tol_bad}
-     </div>
-     <div class="su" style="color:var(--red)">
-       &gt;12 cm
-     </div>
-   </div>
 
    <div class="stat">
-     <div class="sl"> Replanteado </div>
+     <div class="sl"> Fundidos </div>
      <div class="sv" style="color:var(--green)">
        ${META.tol_ok}
      </div>
@@ -3285,7 +3276,7 @@ function renderStats(){
     pct+'%';
 
   document.getElementById('progSub').textContent =
-    `${META.done} de ${META.n} pilotes · faltan ${META.pending} ·  ${META.tol_warn} , ${META.tol_bad} tolerancias altas`;
+    `${META.done} de ${META.n} pilotes · faltan ${META.pending} ;
 }
 function setV(v){
 
