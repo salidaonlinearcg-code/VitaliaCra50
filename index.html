@@ -1084,6 +1084,7 @@ const P_VTL = (function () {
 
   // Intentar primero Google Sheets.
   const sheetsData = loadFromSheets();
+
   if (sheetsData) {
 
     return sheetsData;
@@ -1332,7 +1333,6 @@ const P_VTL = (function () {
   ];
 
 })();
- 
 // Variables/ indices: 0 id,1 x,2 y,3 tower,4 status,5 ax,6 ay,7 devcm, 8 Volumen Teorico, 9 volumen final, fecha de fundido
 const M_VTL = computeMeta(P_VTL, {
   diam: 0.6,
